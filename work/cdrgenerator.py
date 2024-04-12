@@ -286,10 +286,20 @@ def generate_cdr(_customers, _cfg):
                 cdr, new_row = add_cdr(customer, 
                        contact, 
                        get_timestamp(start_date), 
-                       get_duration(avg_duration*2), 
+                       get_duration(avg_duration*1.7), 
                        customer.imei, 
                        'VOICE', 
-                       get_bts(int(0.2*bts_cnt)), 
+                       get_bts(int(0.15*bts_cnt)), 
+                       0)
+            
+            elif customer.probe==2:
+                cdr, new_row = add_cdr(customer, 
+                             contact, 
+                       get_timestamp(start_date), 
+                       get_duration(avg_duration*1.9), 
+                       customer.imei, 
+                       'VOICE', 
+                       get_bts(int(0.15*bts_cnt)), 
                        0)
                 
             else:
@@ -299,7 +309,7 @@ def generate_cdr(_customers, _cfg):
                         get_duration(avg_duration), 
                         customer.imei, 
                         'VOICE', 
-                        get_bts(bts_cnt), 
+                        get_bts(int(0.6*bts_cnt)), 
                         0)
                             
             res = pd.DataFrame(new_row, index=[0])
@@ -391,10 +401,10 @@ def simbox_scenario_prepare(_cfg, _frauder_num, _operators, _customers):
 
     return customers
 
-def simbox_scenario(_cfg, _frauder_num, _operators, _customers):
+def simbox_scenario(_cfg, _customer_num, _operators, _customers):
 
-    for k in range(_frauder_num):
-        customer_cnt = random.randint(10, 20)
+    for k in range(_customer_num):
+        customer_cnt = random.randint(5, 20)
         imei = 's1_imei_' + str(k)
         oper = random.choice(_operators)
         
@@ -404,12 +414,12 @@ def simbox_scenario(_cfg, _frauder_num, _operators, _customers):
             frauder.imei = imei
             frauder.frauder = 1
         
-            for _ in range(random.randint(20, _cfg['SOCIAL_FAR'] * random.randint(20, 30))):
+            for _ in range(random.randint(10, _cfg['SOCIAL_FAR'] * random.randint(3, 20))):
                 possible_contact = random.choice(_customers)
                 if (possible_contact.customerid != frauder.customerid) & (possible_contact.operator.name == frauder.operator.name):
                     frauder.acquaintances.append(possible_contact)
             
-            call_count = get_weibull_call_count(_cfg['AVG_CALLS_CNT'] * random.randint(20, 30))
+            call_count = get_weibull_call_count(_cfg['AVG_CALLS_CNT'] * random.randint(1, 30))
             for _ in range(call_count):
                 if len(frauder.acquaintances) > 0:
                     possible_contact = random.choice(frauder.acquaintances)
@@ -418,7 +428,7 @@ def simbox_scenario(_cfg, _frauder_num, _operators, _customers):
 def multisim_scenario(_cfg, _multisim_num, _operators, _customers):
 
     for k in range(_multisim_num):
-        customer_cnt = random.randint(20, 50)
+        customer_cnt = random.randint(5, 20)
         imei = 'm1_imei_' + str(k)
         oper = random.choice(_operators)
         
@@ -426,15 +436,16 @@ def multisim_scenario(_cfg, _multisim_num, _operators, _customers):
             
             frauder = random.choice(_customers)
             if (frauder.frauder != 1) & (frauder.probe != 1):
+                frauder.probe = 2
                 frauder.operator = oper
                 frauder.imei = imei
                 
-                for _ in range(random.randint(20, _cfg['SOCIAL_FAR'] * random.randint(10, 20))):
+                for _ in range(random.randint(10, _cfg['SOCIAL_FAR'] * random.randint(3, 20))):
                     possible_contact = random.choice(_customers)
                     if (possible_contact.customerid != frauder.customerid) & (possible_contact.operator.name == frauder.operator.name):
                         frauder.acquaintances.append(possible_contact)
                 
-                call_count = get_weibull_call_count(_cfg['AVG_CALLS_CNT'] * random.randint(1, 20))
+                call_count = get_weibull_call_count(_cfg['AVG_CALLS_CNT'] * random.randint(1, 30))
                 for _ in range(call_count):
                     if len(frauder.acquaintances) > 0:
                         possible_contact = random.choice(frauder.acquaintances)
@@ -443,7 +454,7 @@ def multisim_scenario(_cfg, _multisim_num, _operators, _customers):
 def probe_scenario(_cfg, _probe_num, _operators, _customers):
 
     for k in range(_probe_num):
-        customer_cnt = random.randint(10, 30)
+        customer_cnt = random.randint(5, 20)
         imei = 'p1_imei_' + str(k)
         oper = random.choice(_operators)
         
@@ -455,12 +466,12 @@ def probe_scenario(_cfg, _probe_num, _operators, _customers):
                 probe.imei = imei
                 probe.probe = 1
             
-                for _ in range(random.randint(20, _cfg['SOCIAL_FAR'] * random.randint(20, 50))):
+                for _ in range(random.randint(10, _cfg['SOCIAL_FAR'] * random.randint(3, 20))):
                     possible_contact = random.choice(_customers)
                     if (possible_contact.customerid != probe.customerid) :
                         probe.acquaintances.append(possible_contact)
                 
-                call_count = get_weibull_call_count(_cfg['AVG_CALLS_CNT'] * random.randint(20, 50))
+                call_count = get_weibull_call_count(_cfg['AVG_CALLS_CNT'] * random.randint(1, 30))
                 for _ in range(call_count):
                     if len(probe.acquaintances) > 0:
                         possible_contact = random.choice(probe.acquaintances)
